@@ -4,10 +4,10 @@
 //! Dark background, cyan/magenta accents, amber warnings.
 //! Standardized `[TAG  ]` prefix format for agent-parseable output.
 
+pub mod format;
 pub mod theme;
 pub mod tide;
-pub mod format;
 
+pub use format::*;
 pub use theme::*;
 pub use tide::*;
-pub use format::*;

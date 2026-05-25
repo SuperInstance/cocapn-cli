@@ -20,17 +20,39 @@ pub fn tag(label: &str) -> String {
 /// Standard tags for fleet operations
 pub mod tags {
     use super::tag;
-    pub fn plato() -> String { tag("plato") }
-    pub fn valid() -> String { tag("valid") }
-    pub fn ask() -> String { tag("ask") }
-    pub fn rank() -> String { tag("rank") }
-    pub fn import() -> String { tag("import") }
-    pub fn flux() -> String { tag("flux") }
-    pub fn guard() -> String { tag("guard") }
-    pub fn deploy() -> String { tag("deploy") }
-    pub fn certify() -> String { tag("cert") }
-    pub fn error() -> String { tag("error") }
-    pub fn warn() -> String { tag("warn") }
+    pub fn plato() -> String {
+        tag("plato")
+    }
+    pub fn valid() -> String {
+        tag("valid")
+    }
+    pub fn ask() -> String {
+        tag("ask")
+    }
+    pub fn rank() -> String {
+        tag("rank")
+    }
+    pub fn import() -> String {
+        tag("import")
+    }
+    pub fn flux() -> String {
+        tag("flux")
+    }
+    pub fn guard() -> String {
+        tag("guard")
+    }
+    pub fn deploy() -> String {
+        tag("deploy")
+    }
+    pub fn certify() -> String {
+        tag("cert")
+    }
+    pub fn error() -> String {
+        tag("error")
+    }
+    pub fn warn() -> String {
+        tag("warn")
+    }
 }
 
 /// Format a progress line: `[TAG] ████████░░ 60% | detail`
