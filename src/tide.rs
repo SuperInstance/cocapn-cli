@@ -17,7 +17,7 @@ impl TideBar {
 
     pub fn update(&mut self, delta: usize, detail: &str) {
         self.current = (self.current + delta).min(self.total);
-        let pct = if self.total > 0 { self.current * 100 / self.total } else { 100 };
+        let pct = self.current.checked_div(self.total).map_or(100, |q| q * 100);
         let filled = pct / 5;
         let empty = 20 - filled;
         let bar: String = "▓".repeat(filled) + &"░".repeat(empty);

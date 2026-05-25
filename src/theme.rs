@@ -35,7 +35,7 @@ pub mod tags {
 
 /// Format a progress line: `[TAG] ████████░░ 60% | detail`
 pub fn progress(tag_str: &str, current: usize, total: usize, detail: &str) -> String {
-    let pct = if total > 0 { current * 100 / total } else { 100 };
+    let pct = current.checked_div(total).map_or(100, |q| q * 100);
     let filled = pct / 5;
     let empty = 20 - filled;
     let bar: String = "█".repeat(filled) + &"░".repeat(empty);
