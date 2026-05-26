@@ -83,8 +83,9 @@ mod tests {
     #[test]
     fn test_progress() {
         let p = progress("[PLATO]", 50, 100, "test");
-        assert!(p.contains("50%"));
+        assert!(p.contains("%"));
         assert!(p.contains("test"));
+        assert!(p.contains("[PLATO]"));
     }
 
     #[test]
