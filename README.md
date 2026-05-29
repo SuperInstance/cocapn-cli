@@ -67,6 +67,7 @@ bar.finish()
 Generates an aligned markdown table.
 
 ## How It Fits
+- [OpenConstruct Documentation](https://github.com/SuperInstance/openconstruct-docs) — ecosystem-wide docs and guides
 
 The formatting backbone for the [SuperInstance fleet](https://github.com/SuperInstance). Every fleet tool — benchmarks, health checks, explainability reports — uses `cocapn-cli` for uniform output that both humans and agents can parse.
 
