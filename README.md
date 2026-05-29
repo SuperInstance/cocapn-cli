@@ -1,157 +1,90 @@
-# cocapn-cli
+# cocapn-cli — Fleet Terminal Formatting
 
-Rust library for consistent terminal output formatting across fleet tools.
+**Consistent, parseable terminal output for every tool in the Cocapn fleet. Zero dependencies, `no_std`-friendly Rust.**
 
-Zero dependencies. `no_std`-friendly. Provides ANSI color constants, fixed-width `[TAG  ]` prefixes, progress bars, and markdown table formatters. Every tool in the Cocapn fleet uses this for uniform, parseable terminal output.
+## What This Gives You
 
-## Install
+- **ANSI color palette** — bioluminescent terminal aesthetic (cyan/magenta/amber) applied consistently across all fleet tools
+- **`[TAG  ]` prefix format** — fixed-width tags (`[FLUX  ]`, `[PLATO ]`, `[VALID ]`) for agent-parseable log lines
+- **Markdown table formatter** — aligned comparison tables from structured data
+- **Tide progress bar** — `▓░` progress indicators for long-running fleet operations
+- **Zero dependencies** — pure Rust, works in `no_std` contexts
 
-```bash
-cargo add cocapn-cli
+## Quick Start
+
+```toml
+# Cargo.toml
+[dependencies]
+cocapn-cli = "0.1"
 ```
 
-## Tags
-
-Fleet output uses a fixed-width `[TAG  ]` prefix — 6 chars, left-aligned, cyan ANSI. Both humans and agents can parse it at a glance.
-
 ```rust
-use cocapn_cli::{tag, tags};
+use cocapn_cli::{tag, colors, TideBar, comparison_table};
 
-// Any string → [TAG  ] format (cyan, 6-char padded)
-println!("{} Deploying fleet stack...", tag("fleet"));
-// [FLEET ] Deploying fleet stack...
+// Tagged output — every fleet tool uses the same format
+println!("{} System check passed", tag("valid"));
 
-println!("{} Room synced", tags::plato());
-println!("{} Constraint verified", tags::valid());
-println!("{} Model ranking complete", tags::rank());
-println!("{} Conservation law violation", tags::warn());
-println!("{} Tile submitted to PLATO", tags::flux());
-println!("{} Fleet deployed", tags::deploy());
-```
+// Colored output
+println!("{}{}Critical alert{}", colors::AMBER, colors::BOLD, colors::RESET);
 
-Available tags: `plato()`, `valid()`, `ask()`, `rank()`, `import()`, `flux()`, `guard()`, `deploy()`, `certify()`, `error()`, `warn()`.
-
-## Progress Bar
-
-```rust
-use cocapn_cli::{tag, progress};
-
-// One-shot: [TAG] ████████░░ 60% | detail
-let line = progress("[PLATO]", 60, 100, "syncing tiles");
-println!("{line}");
-// [PLATO] ████████░░░░░░░░░░░░ 60% | syncing tiles
-```
-
-## Streaming Progress (TideBar)
-
-For operations that run over time — file imports, network syncs, batch processing:
-
-```rust
-use cocapn_cli::TideBar;
-
-let mut bar = TideBar::new(100, "IMPORT");
+// Progress bar
+let mut bar = TideBar::new(100, "BENCHMARK");
 for i in 0..100 {
-    bar.update(1, &format!("item_{i}"));
-    // \r[IMPORT] ▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓▓ 100/100 (100%) | item_99
+    bar.update(1, &format!("run {}", i));
 }
 bar.finish();
-```
 
-`TideBar` writes to stderr with `\r` carriage returns — no screen spam in piped output.
-
-## Health Status Lines
-
-```rust
-use cocapn_cli::health_line;
-
-println!("{}", health_line("Tests", "26", true));
-// │ Tests              │         26 │ ✅ │
-
-println!("{}", health_line("Conservation", "FAIL", false));
-// │ Conservation       │       FAIL │ 🔴 │
-```
-
-18-char label, 10-char value, emoji status. Fixed-width columns align across all fleet tools.
-
-## Markdown Tables
-
-```rust
-use cocapn_cli::comparison_table;
-
+// Comparison tables
 let table = comparison_table(
-    &["Model", "Speed", "Accuracy"],
+    &["Model", "Latency", "Cost"],
     &[
-        vec!["FLUX-VM".into(), "179M/s".into(), "99.7%".into()],
-        vec!["Baseline".into(), "12M/s".into(), "94.2%".into()],
+        vec!["claude-3.5-sonnet".into(), "1.2s".into(), "$0.003".into()],
+        vec!["gpt-4o".into(), "0.8s".into(), "$0.005".into()],
     ],
 );
-println!("{table}");
-// | Model | Speed | Accuracy |
-// |---|---|---|
-// | FLUX-VM | 179M/s | 99.7% |
-// | Baseline | 12M/s | 94.2% |
+println!("{}", table);
 ```
 
-Also includes `safe_tops_w_table()` for a pre-built hardware comparison table.
+## API Reference
 
-## Color Constants
+### `colors` — ANSI Constants
+`CYAN`, `MAGENTA`, `AMBER`, `RED`, `GREEN`, `DIM`, `BOLD`, `RESET`
 
-Raw ANSI escape strings — use them directly when you need custom formatting:
+### `tag(label: &str) -> String`
+Formats a fixed-width `[TAG   ]` prefix with cyan coloring.
 
+### `tags` — Standard Fleet Tags
+`plato()`, `valid()`, `ask()`, `rank()`, `import()`, `flux()`
+
+### `TideBar`
 ```rust
-use cocapn_cli::colors::*;
-
-println!("{CYAN}info{RESET}: something happened");
-println!("{AMBER}warn{RESET}: check this");
-println!("{RED}error{RESET}: something broke");
-println!("{GREEN}ok{RESET}: all clear");
-println!("{DIM}2024-05-23 15:06:00{RESET} {BOLD}header{RESET}");
+TideBar::new(total: usize, label: &str) -> Self
+bar.update(delta: usize, detail: &str)
+bar.finish()
 ```
 
-| Constant | ANSI | Use for |
-|----------|------|---------|
-| `CYAN` | `\x1b[36m` | Tags, labels, primary info |
-| `MAGENTA` | `\x1b[35m` | Highlights, data values |
-| `AMBER` | `\x1b[33m` | Warnings |
-| `RED` | `\x1b[31m` | Errors, failures |
-| `GREEN` | `\x1b[32m` | Success, confirmed |
-| `DIM` | `\x1b[2m` | Timestamps, secondary info |
-| `BOLD` | `\x1b[1m` | Headers, critical values |
-| `RESET` | `\x1b[0m` | Reset all formatting |
+### `comparison_table(headers, rows) -> String`
+Generates an aligned markdown table.
 
-## Module Reference
+## How It Fits
 
-| Module | What | Key Functions |
-|--------|------|---------------|
-| `theme` | Colors, tags, progress, health_line | `tag()`, `tags::*`, `progress()`, `health_line()` |
-| `tide` | Streaming progress bar | `TideBar::new()`, `.update()`, `.finish()` |
-| `format` | Table formatters | `comparison_table()`, `safe_tops_w_table()` |
+The formatting backbone for the [SuperInstance fleet](https://github.com/SuperInstance). Every fleet tool — benchmarks, health checks, explainability reports — uses `cocapn-cli` for uniform output that both humans and agents can parse.
 
-## Why This Exists
+- **[cocapn](https://github.com/SuperInstance/cocapn)** — Core agent infrastructure
+- **[cocapn-health-rs](https://github.com/SuperInstance/cocapn-health-rs)** — Fleet health monitoring (uses this for output)
+- **[cocapn-benchmark](https://github.com/SuperInstance/cocapn-benchmark)** — Performance testing (uses this for tables)
 
-Fleet tools output to terminals read by both humans and agents. A shared format means:
-
-- Agents can parse `[TAG  ]` prefixes with regex (fixed 6-char width)
-- Humans can scan color-coded severity at a glance
-- Logs look the same across every fleet tool
-- No external formatting dependencies in any fleet crate
-
-## Tests
+## Testing
 
 ```bash
 cargo test
-# 5 tests: tag format, progress output, health line, comparison table, Safe-TOPS/W table
 ```
 
-## Related Fleet Repos
+## Installation
 
-| Repo | What |
-|------|------|
-| [cocapn-traps](https://github.com/SuperInstance/cocapn-traps) | Crab trap management |
-| [cocapn-health](https://github.com/SuperInstance/cocapn-health) | Fleet health monitoring |
-| [cocapn-glue-core](https://github.com/SuperInstance/cocapn-glue-core) | Binary wire protocol |
-| [cocapn-plato](https://github.com/SuperInstance/cocapn-plato) | PLATO engine + SDK |
+```toml
+[dependencies]
+cocapn-cli = "0.1"
+```
 
-## License
-
-MIT OR Apache-2.0
+MIT OR Apache-2.0.
