@@ -57,7 +57,11 @@ pub mod tags {
 
 /// Format a progress line: `[TAG] ████████░░ 60% | detail`
 pub fn progress(tag_str: &str, current: usize, total: usize, detail: &str) -> String {
-    let pct = current.checked_div(total).map_or(100, |q| q * 100);
+    let pct = if total == 0 {
+        100
+    } else {
+        (current * 100 / total).min(100)
+    };
     let filled = pct / 5;
     let empty = 20 - filled;
     let bar: String = "█".repeat(filled) + &"░".repeat(empty);
@@ -160,6 +164,24 @@ mod tests {
     fn test_progress_contains_detail() {
         let p = progress("[X]", 0, 10, "my-detail");
         assert!(p.contains("my-detail"));
+    }
+
+    #[test]
+    fn test_progress_correct_percent() {
+        let p = progress("[TAG]", 25, 100, "quarter");
+        assert!(p.contains("25%"));
+    }
+
+    #[test]
+    fn test_progress_correct_percent_half() {
+        let p = progress("[TAG]", 50, 100, "half");
+        assert!(p.contains("50%"));
+    }
+
+    #[test]
+    fn test_progress_clamped_at_100() {
+        let p = progress("[TAG]", 200, 100, "over");
+        assert!(p.contains("100%"));
     }
 
     // --- health_line() ---
