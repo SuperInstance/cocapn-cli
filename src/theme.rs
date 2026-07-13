@@ -57,11 +57,7 @@ pub mod tags {
 
 /// Format a progress line: `[TAG] ████████░░ 60% | detail`
 pub fn progress(tag_str: &str, current: usize, total: usize, detail: &str) -> String {
-    let pct = if total == 0 {
-        100
-    } else {
-        (current * 100 / total).min(100)
-    };
+    let pct = (current * 100).checked_div(total).unwrap_or(100).min(100);
     let filled = pct / 5;
     let empty = 20 - filled;
     let bar: String = "█".repeat(filled) + &"░".repeat(empty);
@@ -123,7 +119,8 @@ mod tests {
             assert!(
                 stripped.contains(label),
                 "tag should contain {:?}, got {:?}",
-                label, stripped
+                label,
+                stripped
             );
         }
     }
